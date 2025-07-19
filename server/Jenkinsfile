@@ -1,0 +1,69 @@
+pipeline {
+    agent any
+    environment {
+        SONAR_HOME = tool 'mynodeappreact'
+    }
+    stages {
+        stage('Code Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Shudhoo/3-tier-node-app.git'
+                stash name: 'source-code'
+            }
+        }
+        stage('Unit Test Cases') {
+            agent {
+                docker {
+                    image 'shudhodhan/mynodeapp-agent:v1'
+                    args '-e HOME=/tmp'
+                }
+            }
+            steps {
+                unstash 'source-code'
+                dir('server') {
+                    sh 'npm install'
+                    sh 'npm run test'
+                }
+            }
+        }
+        stage('Code-Quality') {
+            steps {
+                withSonarQubeEnv("mynodeappreact") {
+                    sh "$SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=3-tier-node-app-node -Dsonar.projectKey=3-tier-node-app-node -Dsonar.sources=server"
+                }
+            }
+        }
+        stage('Docker Build') {
+            steps {
+                dir('server') {
+                    sh 'docker build --file Dockerfile -t shudhodhan/mynodeapp-server:${BUILD_NUMBER} .'
+                }
+            }
+        }
+        stage('Image-Scaning') {
+            steps {
+                sh '''
+                docker run --rm \
+                -v /var/run/docker.sock:/var/run/docker.sock \
+                aquasec/trivy:latest image\
+                shudhodhan/mynodeapp-server:${BUILD_NUMBER} 
+                '''
+            }
+        }
+        stage('Push Image') {
+            steps {
+                withDockerRegistry(credentialsId: 'docker_cred', url: 'https://index.docker.io/v1/') {
+                    sh 'docker push shudhodhan/mynodeapp-server:${BUILD_NUMBER}'
+                }
+            }
+        }
+        stage('Update Kubernetes') {
+            steps {
+                    echo 'Hey From K8s'
+            }
+        }
+    }
+}
+
+                
+        
+
