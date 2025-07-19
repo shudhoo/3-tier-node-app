@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        SONAR_HOME = tool 'mynodeappreact'
+        SONAR_HOME = tool 'mynodeapp'
     }
     stages {
         stage('Code Checkout') {
@@ -27,7 +27,7 @@ pipeline {
         }
         stage('Code-Quality') {
             steps {
-                withSonarQubeEnv("mynodeappreact") {
+                withSonarQubeEnv("mynodeapp") {
                     sh "$SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=3-tier-node-app-client -Dsonar.projectKey=3-tier-node-app-client -Dsonar.sources=client"
                 }
             }
