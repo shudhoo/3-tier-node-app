@@ -35,7 +35,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 dir('client') {
-                    sh 'docker build --file Dockerfile -t shudhodhan/mynodeapp-client:${BUILD_NUMBER} .'
+                    sh 'docker build --file Dockerfile -t shudhodhan/mynodeapp-client-demo:${BUILD_NUMBER} .'
                 }
             }
         }
@@ -45,14 +45,14 @@ pipeline {
                 docker run --rm \
                 -v /var/run/docker.sock:/var/run/docker.sock \
                 aquasec/trivy:latest image\
-                shudhodhan/mynodeapp-client:${BUILD_NUMBER} 
+                shudhodhan/mynodeapp-client-demo:${BUILD_NUMBER} 
                 '''
             }
         }
         stage('Push Image') {
             steps {
                 withDockerRegistry(credentialsId: 'docker_cred', url: 'https://index.docker.io/v1/') {
-                    sh 'docker push shudhodhan/mynodeapp-client:${BUILD_NUMBER}'
+                    sh 'docker push shudhodhan/mynodeapp-client-demo:${BUILD_NUMBER}'
                 }
             }
         }
